@@ -4,6 +4,7 @@ from urllib.parse import ParseResult
 from urllib.parse import urljoin, urlparse
 from seleniumwire import webdriver
 import requests
+from bs4 import BeautifulSoup
 
 
 class Scraper(ABC):
@@ -13,7 +14,9 @@ class Scraper(ABC):
 
     @staticmethod
     def _test_shopify(url: ParseResult) -> Tuple[bool, ParseResult]:
-        resp = requests.get(urljoin(f'{url.scheme}://{url.netloc}', 'products.json?limit=10'))
+        resp = requests.get(
+            urljoin(f"{url.scheme}://{url.netloc}", "products.json?limit=10")
+        )
 
         if resp.status_code == 200:
             return True, url
@@ -22,14 +25,20 @@ class Scraper(ABC):
         # in the url name which is Shopify's constant, 'hidden' url for their store.
 
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('headless')
+        chrome_options.add_argument("headless")
         driver = webdriver.Chrome(chrome_options=chrome_options)
-        driver.get(urljoin(f'{url.scheme}://{url.netloc}', url.path))
+        driver.get(urljoin(f"{url.scheme}://{url.netloc}", url.path))
         for request in driver.requests:
-            if 'myshopify' in request.url:
+            if "myshopify" in request.url:
                 return True, urlparse(request.url)
 
-        return False, urlparse('')
+        return False, urlparse("")
+
+    @staticmethod
+    def _test_woocommerce(url: ParseResult) -> bool:
+        resp = requests.get(urljoin(f"{url.scheme}://{url.netloc}", url.path))
+        soup = BeautifulSoup(resp.content, "html.parser")
+        return soup.find(class_="woocommerce") is not None
 
     @staticmethod
     def factory(url: ParseResult):
@@ -39,10 +48,17 @@ class Scraper(ABC):
         #  SHOPIFY
         if site_type:
             from scraper.shopifyScraper import ShopifyScraper
+
             return ShopifyScraper(url_)
 
+        #   WOOCOMMERCE
+        site_type = Scraper._test_woocommerce(url)
+        if site_type:
+            from scraper.wooScraper import WooScraper
+
+            return WooScraper(url)
+
     #     if BIGCOMMERCE
-    #     if WooCommerce
     #     ...
 
     def _get_products(self):

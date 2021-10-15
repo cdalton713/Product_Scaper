@@ -20,8 +20,12 @@ class ShopifyScraper(Scraper):
         p = {}
         while count == 250:
             resp = requests.get(
-                urljoin(f'{self.url.scheme}://{self.url.netloc}', f'products.json?limit=250&page={page}'))
-            products = resp.json()['products']
+                urljoin(
+                    f"{self.url.scheme}://{self.url.netloc}",
+                    f"products.json?limit=250&page={page}",
+                )
+            )
+            products = resp.json()["products"]
             for product in products:
                 try:
                     item = ShopifyProduct(**product)

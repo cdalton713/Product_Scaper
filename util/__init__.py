@@ -1,9 +1,17 @@
 from .util import Util
-from util.models import ShopifyOption, ShopifyVariant, ShopifyProduct
+from util.models import (
+    ShopifyOption,
+    ShopifyVariant,
+    ShopifyProduct,
+    WooProduct,
+    WooVariant,
+)
 
 __all__ = [
-    'Util',
+    "Util",
     "ShopifyOption",
     "ShopifyVariant",
-    "ShopifyProduct"
+    "ShopifyProduct",
+    "WooProduct",
+    "WooVariant",
 ]
